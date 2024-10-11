@@ -17,7 +17,8 @@ other_tokens = {'<PAD>':0,'<BOS>':1, '<EOS>':2, '<UNK>':3 }
 
 word_dictionary = create_dictionary('training_label.json')
 # print(word_dictionary)
-word_to_idx = {key:(idx + len(other_tokens)) for idx, key in enumerate(word_dictionary) if word_dictionary[key] > 3}
+word_dictionary = {key:val for key, val in word_dictionary.items() if val > 3}
+word_to_idx = {key:(idx + len(other_tokens)) for idx, key in enumerate(word_dictionary)}
 word_to_idx.update(other_tokens)
 
 
@@ -45,6 +46,15 @@ def sentence_to_idx(caption, max_length = max_length, word_to_idx=word_to_idx, o
         words = words + ((max_length-1)-(len(words))) * ['<PAD>'] + ['<EOS>']
     words = [word_to_idx.get(word,word_to_idx['<UNK>']) for word in words]
     return words
+
+def clean_caption(caption):
+    caption = caption.replace('.','').replace('?','').replace('!','').replace(',','').replace("'",'').replace('-','').replace('"','')
+    return caption
+
+def remove_other_tokens(sentence:list):
+    if sentence:
+        return ' '.join([token for token in sentence if token not in ['<PAD>','<BOS>', '<EOS>']])
+    return ''
 
 
 

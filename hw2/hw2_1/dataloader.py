@@ -32,7 +32,8 @@ class MLDSVideoDataset(Dataset):
         label = self.vid_labels[idx]
         avi_file = label['id']
         label_caps = label['caption']
-        label_caps = [sentence_to_idx(captions) for captions in label_caps]
+        label_caps = sentence_to_idx(label_caps[0])
+        #label_caps = [sentence_to_idx(captions) for captions in label_caps]
         label_caps = torch.tensor(label_caps)
         
         #video_feature = torch.load((Path(self.vid_dir)/'feat')/f'{avi_file}.npy')
