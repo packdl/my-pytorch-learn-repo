@@ -13,7 +13,6 @@ else:
     device = 'cpu'
 
 print(f'{device} is available')
-device='cpu'
 dtype = torch.float
 
 def train_loop(dataloader, model, loss_fn, optimize):
