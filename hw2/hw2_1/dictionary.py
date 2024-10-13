@@ -26,14 +26,13 @@ word_to_idx.update(other_tokens)
 def get_max_length(label_path):
     with open(label_path,'r') as FILE_:
         labels = json.load(FILE_)
-        max_length = 0
+        max_length_vals = []
         for label in labels:
             for caption in label['caption']:
                 caption = caption.replace('.','').replace('?','').replace('!','').replace(',','').replace("'",'').replace('-','').replace('"','')
-                cap_len = len(caption.split())
-                if cap_len > max_length:
-                    max_length = cap_len
-    return max_length + 2
+                max_length_vals.append(len(caption.split()))
+                
+    return 2 + int(sum(max_length_vals)/len(max_length_vals))
 
 max_length=get_max_length('training_label.json')
 
@@ -44,6 +43,8 @@ def sentence_to_idx(caption, max_length = max_length, word_to_idx=word_to_idx, o
     words = ['<BOS>'] + caption.split()
     if len(words) < max_length:
         words = words + ((max_length-1)-(len(words))) * ['<PAD>'] + ['<EOS>']
+    else:
+        words = words[:max_length-1] + ['<EOS>']
     words = [word_to_idx.get(word,word_to_idx['<UNK>']) for word in words]
     return words
 
@@ -55,8 +56,6 @@ def remove_other_tokens(sentence:list):
     if sentence:
         return ' '.join([token for token in sentence if token not in ['<PAD>','<BOS>', '<EOS>']])
     return ''
-
-
 
 if __name__ == '__main__':
     print(word_dictionary.most_common(10))
