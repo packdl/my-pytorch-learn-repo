@@ -32,20 +32,19 @@ def train_loop(dataloader, model, loss_fn, optimize):
 
     for batch, (X, y) in enumerate(dataloader):
         X = X.to(device)
-        X = X.squeeze()
-        y = y.squeeze(dim=0)
-        #print(f'X.shape is {X.shape}')
-        #print(f'dataloader length is {len(dataloader)}')
+        y = y.to(device)
+        batch_size = y.size(0)
+        sequence_length = y.size(1)
+
+
         optimize.zero_grad()
-        y_pred = model(X)
-
-        print(y.dtype)
-        print(y_pred.dtype)
-        print(y_pred)
-
-        loss = loss_fn(y_pred, y)
+        y_pred = model(X, y)
+        #print(f'{y_pred.shape = }')
+        #print(f'{y.shape = }')
+        #loss = loss_fn(y_pred, y)
+        loss = loss_fn(y_pred.view(-1, y_pred.size(-1)), y.view(-1))
         train_loss += loss.item()
-        correct += (y_pred.argmax(dim=1) == y).type(torch.float).sum().item()
+        correct += (y_pred.argmax(dim=2) == y).type(torch.float).sum().item()
 
         loss.backward()
         optimize.step()
@@ -65,28 +64,25 @@ def eval_loop(dataloader, model):
         bleus = []
         for X,y in dataloader:
             X = X.to(device)
-            X = X.squeeze()
-            y = y.squeeze(dim=0)
-            y.to(device, dtype=torch.float)
-
+            y = y.to(device)
             y_pred = model(X)
-
-            y_pred.to(dtype=torch.float)
-
-            m = nn.LogSoftmax(dim=0)
+            
+            batch_size = y_pred.size(0)
+            seq_length = y_pred.size(1)
+            y_pred_view, y_view = y_pred.view(-1, y_pred.size(-1)), y.view(-1)
+            
             pred_sentence = []
             actual = []
-            for y_pred_row, y_row in zip(y_pred, y):
-                y_pred_idx = torch.argmax(m(y_pred_row)).item()
-                pred_sentence.append(idx_to_word[y_pred_idx])
-                actual.append(idx_to_word[y_row.item()])
+            for seq in range(seq_length):
+                pred_sentence.append(idx_to_word[torch.argmax(y_pred_view[seq]).item()])
+                actual.append(idx_to_word[y_view[seq].item()])
 
             pred_sentence = remove_other_tokens(pred_sentence)
             actual = remove_other_tokens(actual)
 
-            bleus.append(BLEU(pred_sentence, actual))
+            bleus.append(BLEU(pred_sentence, actual) if pred_sentence else 0)
 
-        return sum(bleus)/size
+        return sum(bleus)/size, pred_sentence, actual
 
 if __name__=='__main__':
     #model = Seq2Seq(4096, 512, 512, 512)
@@ -105,7 +101,7 @@ if __name__=='__main__':
         epoch = 0
         loss = 0
     
-    epochs = 25
+    epochs = 75
 
     if epoch / epochs > .95:
         epochs *=2
@@ -114,24 +110,35 @@ if __name__=='__main__':
     
     batch_size=10
     
+    
     train_dataloader = DataLoader(MLDSVideoDataset('training_label.json', 'training_data'), batch_size=batch_size)
-    #eval_dataloader = DataLoader(MLDSVideoDataset('testing_label.json', 'testing_data'))
+    eval_dataloader = DataLoader(MLDSVideoDataset('testing_label.json', 'testing_data'), batch_size=batch_size)
     
     start = time.time()
-    for epoch in range(epochs):
+    for epoch in range(epoch, epochs):
         with open('training_run.txt','a') as run:
             run.write(f'Started at {start}\n')
             loss, correct = train_loop(train_dataloader, model, loss_fn, optimizer1)
-            run.write(f'Epoch: {epoch}. Loss: {loss}. Acurracy: {correct}. Time: {time.time()}\n')
-            print(f'Epoch: {epoch}. Loss: {loss}. Acurracy: {correct}. Time: {time.time()}')
+            
+            if epoch%10==0:
+                run.write(f'Epoch: {epoch}. Loss: {loss}. Acurracy: {correct}. Time: {time.time()}\n')
+                print(f'Epoch: {epoch}. Loss: {loss}. Acurracy: {correct}. Time: {time.time()}')
 
-        if epoch !=0 and epoch % 50 ==0:
-            torch.save({
-            'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer1.state_dict(),
-            'loss': loss,
-             }, './checkpoint.tar')
+            bleu, pred, actual = eval_loop(eval_dataloader, model)
+            run.write(f'Epoch: {epoch}. BLEU: {bleu}\n')
+            print(f'Epoch: {epoch}. BLEU: {bleu}') 
+
+            if epoch !=0 and epoch % 50 ==0:
+                torch.save({
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer1.state_dict(),
+                'loss': loss,
+                }, './checkpoint.tar')
+
+                run.write(f'{epoch = }. {pred = }. {actual =}')
+                print(f'{epoch = }. {pred = }. {actual =}')
+     
     end = time.time()
     with open('training_run.txt','a') as run:
         run.write(f'Ended at {end}. Total runtime is {end-start}\n')
