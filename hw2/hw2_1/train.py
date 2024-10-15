@@ -102,7 +102,7 @@ if __name__=='__main__':
         epoch = 0
         loss = 0
     
-    epochs = 100
+    epochs = 60
 
     if epoch / epochs > .95:
         epochs *=2

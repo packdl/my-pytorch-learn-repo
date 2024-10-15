@@ -29,6 +29,27 @@ class TextDecoder(nn.Module):
         output, (e_hidden, e_cell) = self.lstm(x, (hidden,cell))
         return output, (e_hidden, e_cell) """
 
+class Attention(nn.Module):
+    def __init__(self, hidden):
+        super().__init__()
+        self.hidden = hidden
+        self.W = nn.Linear(hidden,hidden)
+        self.V = nn.Linear(hidden, 1)
+        self.U = nn.Linear(hidden, hidden)
+
+    def forward(self, hidden, encoder_output):
+
+        if hidden.size(0) != encoder_output.size(0):
+            hidden = hidden.permute(1,0,2)
+        scores = self.V(torch.tanh(self.W(hidden) + self.U(encoder_output)))
+        scores = scores.squeeze(2).unsqueeze(1)
+
+        weights = F.softmax(scores, dim=-1)
+        context = torch.bmm(weights, encoder_output)
+
+        return context, weights
+
+
 class Seq2Seq(nn.Module):
     def __init__(self, input_size, hidden, word_to_idx = word_to_idx, sentence_len = max_length):
         super().__init__()
@@ -37,7 +58,7 @@ class Seq2Seq(nn.Module):
         self.sentence_len = sentence_len
         self.gru1 = nn.GRU(hidden, hidden, batch_first=True)
         self.gru2 = nn.GRU(2*hidden, hidden, batch_first=True)
-        self.attention = nn.MultiheadAttention(hidden, 2)
+        self.attention = Attention(hidden)
         self.embedding = nn.Embedding(len(self.word_to_idx), hidden)
         self.input_lin = nn.Linear(input_size, hidden)
         self.logits = nn.Linear(hidden, len(word_to_idx))
@@ -76,9 +97,10 @@ class Seq2Seq(nn.Module):
         decoder_input = self.dropout(decoder_input)
         # query = hidden.permute(1,0,2)
 
-        e_hidden = e_hidden.permute(1,0,2)
+        #e_hidden = e_hidden.permute(1,0,2)
+        query = d_hidden.permute(1,0,2)
 
-        ctx, attn_weights = self.attention(e_hidden, e_hidden, e_hidden)
+        ctx, attn_weights = self.attention(query, encoder_output)
         #print(f'ddfd{decoder_input.shape = }')
         #print(f'ffff{ctx.shape = }')
         decoder_input = torch.cat((decoder_input, ctx), dim=2)
