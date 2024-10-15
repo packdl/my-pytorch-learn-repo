@@ -74,12 +74,6 @@ class Seq2Seq(nn.Module):
 
         decoder_input = torch.ones(batch_size, 1, dtype=int) * self.word_to_idx['<BOS>']
         decoder_input = self.embedding(decoder_input)
-        #print(f'{decoder_input.shape = }')
-        pad = torch.zeros(batch_size, step-1, decoder_input.size(2))
-        #print(f'{pad.shape =}')
-
-        decoder_input = torch.cat([decoder_input, pad], 1)
-        #print(f'{decoder_input.shape =}')
     
         sentence = []
         sentence.append(decoder_input)
@@ -88,27 +82,15 @@ class Seq2Seq(nn.Module):
         for incr in range(self.sentence_len-1):
             y, d_hidden = self.forward_step(decoder_input, d_hidden, encoder_output, hidden)
             sentence.append(y)
-            choice = random.choice([True, False])
-            if choice and training_label is not None:
+
+            if random.choice([True, False]) and training_label is not None:
                 decoder_input = self.embedding(training_label[:, incr+1].unsqueeze(1))
-                #print(f'randomchoice{decoder_input.shape = }')
             else:
                 #decoder_input = y
-                _, topi = y.topk(k=1, dim=2)
-                #_, topi2 = y.topk(k=1, dim=1)
-                #print(f'{topi2.shape =}')
-                decoder_input = self.embedding(topi.squeeze(2).detach())
-                
-                #print(f'topiversion{decoder_input.shape = }')
+                _, topi = y.topk(1)
+                decoder_input = self.embedding(topi.squeeze(1).detach())
 
-
-        final_sentence = []
-        for line in sentence:
-            final_sentence.append(self.logits(line.max(dim=1, keepdim=True)[0]))
-        #print(f'{final_sentence[0].shape = }')
-        #print(f'{final_sentence[0].dtype = }')
-           
-        return torch.cat(final_sentence, dim=1)
+        return self.logits(torch.cat(sentence, dim=1))
     
     def forward_step(self, decoder_input, d_hidden, encoder_output, e_hidden):
         # decoder_input = F.relu(decoder_input)
@@ -119,11 +101,10 @@ class Seq2Seq(nn.Module):
         query = d_hidden.permute(1,0,2)
 
         ctx, attn_weights = self.attention(query, encoder_output)
-        
-        ctx = ctx.repeat(1,decoder_input.size(1), 1)
+        #print(f'ddfd{decoder_input.shape = }')
         #print(f'ffff{ctx.shape = }')
         decoder_input = torch.cat((decoder_input, ctx), dim=2)
-        #print(f'ddfd{decoder_input.shape = }')
+        
         output, hidden =  self.gru2(decoder_input, d_hidden)
         output = self.fixy(output)
         return output, hidden
@@ -134,8 +115,7 @@ if __name__ == '__main__':
     x.to('cuda')
     my_model=Seq2Seq(x.size(-1), 256)
     my_model.eval()
-    y_pred = my_model(x, torch.randint(1,25, (5,9)))
+    y_pred = my_model(x)
 
-    
     print(y_pred.shape)
     #my_model.embedding.weights.data - 
