@@ -8,6 +8,7 @@ from dictionary import clean_caption, sentence_to_idx, word_to_idx, remove_other
 from dataloader import MLDSVideoDataset
 from torch.utils.data import DataLoader
 from model_seq2seq import Seq2Seq
+import pandas as pd
 
 
 
@@ -92,7 +93,7 @@ if __name__=='__main__':
     optimizer1 = torch.optim.Adam(model.parameters(), lr)
     
     if (Path('.')/'checkpoint.tar').exists():
-        checkpoint = torch.load(Path('.'/'checkpoint.tar'), weights_only=True)
+        checkpoint = torch.load(Path('.')/'checkpoint.tar', weights_only=True)
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer1.load_state_dict(checkpoint['optimizer_state_dict'])
         epoch = checkpoint['epoch']
@@ -101,32 +102,42 @@ if __name__=='__main__':
         epoch = 0
         loss = 0
     
-    epochs = 75
+    epochs = 100
 
     if epoch / epochs > .95:
         epochs *=2
 
     loss_fn = torch.nn.CrossEntropyLoss()
     
-    batch_size=10
+    batch_size=32
     
     
     train_dataloader = DataLoader(MLDSVideoDataset('training_label.json', 'training_data'), batch_size=batch_size)
     eval_dataloader = DataLoader(MLDSVideoDataset('testing_label.json', 'testing_data'), batch_size=batch_size)
     
+    epoch_list, loss_list, bleu_list,acc_list = [],[], [], []
+
     start = time.time()
-    for epoch in range(epoch, epochs):
-        with open('training_run.txt','a') as run:
+    with open('training_run.txt','a') as run:
             run.write(f'Started at {start}\n')
+
+    for epoch in range(epoch+1, epochs):
+        with open('training_run.txt','a') as run:
             loss, correct = train_loop(train_dataloader, model, loss_fn, optimizer1)
             
             if epoch%10==0:
                 run.write(f'Epoch: {epoch}. Loss: {loss}. Acurracy: {correct}. Time: {time.time()}\n')
                 print(f'Epoch: {epoch}. Loss: {loss}. Acurracy: {correct}. Time: {time.time()}')
+                loss_list.append(loss)
+                epoch_list.append(epoch)
+                acc_list.append(correct)
 
             bleu, pred, actual = eval_loop(eval_dataloader, model)
-            run.write(f'Epoch: {epoch}. BLEU: {bleu}\n')
-            print(f'Epoch: {epoch}. BLEU: {bleu}') 
+            if epoch%10 ==0:
+                run.write(f'Epoch: {epoch}. BLEU: {bleu}\n')
+                print(f'Epoch: {epoch}. BLEU: {bleu}') 
+                bleu_list.append(bleu)
+
 
             if epoch !=0 and epoch % 50 ==0:
                 torch.save({
@@ -136,7 +147,7 @@ if __name__=='__main__':
                 'loss': loss,
                 }, './checkpoint.tar')
 
-                run.write(f'{epoch = }. {pred = }. {actual =}')
+                run.write(f'{epoch = }. {pred = }. {actual =}\n')
                 print(f'{epoch = }. {pred = }. {actual =}')
      
     end = time.time()
@@ -148,3 +159,5 @@ if __name__=='__main__':
             #print(f'Epoch: {epoch}. BLEU: {bleu}')
 
     torch.save(model, 's2vt.pth')
+    df = pd.DataFrame({'epoch':epoch_list, 'bleu':bleu_list,'loss':loss_list,'acc':acc_list})
+    df.to_csv('raw_data.txt')
