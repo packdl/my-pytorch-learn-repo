@@ -1,35 +1,20 @@
+import sys
 import random
+from pathlib import Path
 
 import torch
 import torch.nn as nn 
 import torch.nn.functional as F
 from torchvision.models import vgg16, VGG16_Weights
+from torch.utils.data import DataLoader
 
 from dictionary import word_to_idx, max_length, remove_other_tokens
 
-""" class VideoEncoder(nn.Module):
-    def __init__(self, input_size, hidden_size):
-        super().__init__()
-        self.linear = nn.Linear(input_size, hidden_size)
-        self.dropout= nn.Dropout(p=.25)
-        self.lstm = nn.LSTM(input_size=hidden_size, hidden_size=hidden_size, batch_first=True)
-
-    def forward(self, x):
-        x = self.linear(x)
-        x = self.dropout(x)
-        output, (hidden, cell) = self.lstm(x)
-        return output, (hidden, cell)
-    
-class TextDecoder(nn.Module):
-    def __init__(self, input_size, hidden_size):
-        super().__init__()
-        self.lstm = nn.LSTM(input_size = input_size, hidden_size=hidden_size, batch_first=True)
-        
-    def forward(self, x, hidden, cell):
-        output, (e_hidden, e_cell) = self.lstm(x, (hidden,cell))
-        return output, (e_hidden, e_cell) """
-
 class Attention(nn.Module):
+    """
+    The Attention mechanism is based on the one found at https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html. 
+    It is an implementation of the Bahdanau Attention mechanism. 
+    """
     def __init__(self, hidden):
         super().__init__()
         self.hidden = hidden
@@ -63,7 +48,7 @@ class Seq2Seq(nn.Module):
         self.input_lin = nn.Linear(input_size, hidden)
         self.logits = nn.Linear(hidden, len(word_to_idx))
         self.fixy = nn.Linear(hidden, hidden)
-        self.dropout = nn.Dropout(p = 0.25)
+        self.dropout = nn.Dropout(p = 0.05)
         self.hidden = hidden
 
     def forward(self, x, training_label = None):
@@ -75,10 +60,12 @@ class Seq2Seq(nn.Module):
         decoder_input = torch.ones(batch_size, 1, dtype=int) * self.word_to_idx['<BOS>']
         decoder_input = self.embedding(decoder_input)
         #print(f'{decoder_input.shape = }')
-        pad = torch.zeros(batch_size, step-1, decoder_input.size(2))
+        
+        #pad = torch.zeros(batch_size, step-1, decoder_input.size(2))
+        
         #print(f'{pad.shape =}')
 
-        decoder_input = torch.cat([decoder_input, pad], 1)
+        #decoder_input = torch.cat([decoder_input, pad], 1)
         #print(f'{decoder_input.shape =}')
     
         sentence = []
@@ -103,7 +90,7 @@ class Seq2Seq(nn.Module):
 
 
         final_sentence = []
-        for line in sentence:
+        for line in sentence: # batchsize x 80 X 256
             final_sentence.append(self.logits(line.max(dim=1, keepdim=True)[0]))
         #print(f'{final_sentence[0].shape = }')
         #print(f'{final_sentence[0].dtype = }')
@@ -112,24 +99,23 @@ class Seq2Seq(nn.Module):
     
     def forward_step(self, decoder_input, d_hidden, encoder_output, e_hidden):
         # decoder_input = F.relu(decoder_input)
-        decoder_input = self.dropout(decoder_input)
+        #decoder_input = self.dropout(decoder_input)
         # query = hidden.permute(1,0,2)
 
         #e_hidden = e_hidden.permute(1,0,2)
         query = d_hidden.permute(1,0,2)
-
+        encoder_output = encoder_output[:,0,:].unsqueeze(1)
         ctx, attn_weights = self.attention(query, encoder_output)
         
-        ctx = ctx.repeat(1,decoder_input.size(1), 1)
+        #ctx = ctx.repeat(1,decoder_input.size(1), 1)
         #print(f'ffff{ctx.shape = }')
         decoder_input = torch.cat((decoder_input, ctx), dim=2)
         #print(f'ddfd{decoder_input.shape = }')
         output, hidden =  self.gru2(decoder_input, d_hidden)
-        output = self.fixy(output)
         return output, hidden
 
 if __name__ == '__main__':
-    torch.set_default_device('cuda')
+    """ torch.set_default_device('cuda')
     x = torch.rand(5, 80, 4096)
     x.to('cuda')
     my_model=Seq2Seq(x.size(-1), 256)
@@ -137,5 +123,51 @@ if __name__ == '__main__':
     y_pred = my_model(x, torch.randint(1,25, (5,9)))
 
     
-    print(y_pred.shape)
+    print(y_pred.shape) """ 
     #my_model.embedding.weights.data - 
+
+
+if __name__ == '__main__':
+    
+    if torch.cuda.is_available():
+        device = 'cuda'
+    elif torch.backends.mps.is_available():
+        device = 'mps'
+    else:
+        device = 'cpu'
+
+    print(f'{device} is available')
+    torch.set_default_device(device)
+    torch.set_default_dtype(torch.float64)
+    
+    if len(sys.argv) == 3:        
+        _, test_dir, outputfile = sys.argv
+        print("let's go create some captions")
+        print("We assume the use of testing_label.json in the same directory as hw2_seq2seq.sh and TESTDIR ")
+
+        with open(Path(test_dir)/'id.txt', 'r') as id_file:
+            file_ids = id_file.readlines()
+        file_ids =[vid_id.strip() for vid_id in file_ids]
+
+        eval_dataloader = DataLoader(MLDSVideoDataset('testing_label.json', test_dir), batch_size=1)
+        model=Seq2Seq(4096, 256)
+
+        if (Path('.')/'s2vt.pth').exists():
+            print("Checkpoint file loading.")
+            checkpoint = torch.load(Path('.')/'s2vt.pth', weights_only=True)
+            model.load_state_dict(checkpoint)
+
+        write_to_file = []
+        for X, target in eval_dataloader:
+            loader = DataLoader(WeirdDataset('testing_label.json', 'testing_data'), batch_size=1)
+            for X,target in loader:
+                label, data = x
+                label=label[0]
+                candidate = model(data)
+                write_to_file.append(f'{label},{candidate}')
+
+
+        with open(outputfile, 'w') as out:
+            out.write('\n'.join(write_to_file))     
+    else:
+        print('usage: hw2_seq2seq.sh TESTDIR OUTPUT_FILE')

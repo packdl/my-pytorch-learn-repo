@@ -1,2 +1,0 @@
-cuda is available
-Epoch: 0. Loss: 1.514743586122609. Acurracy: 32.710344827586205. Time: 1728683153.0198767

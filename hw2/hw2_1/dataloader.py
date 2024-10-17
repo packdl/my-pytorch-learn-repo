@@ -39,4 +39,35 @@ class MLDSVideoDataset(Dataset):
         video_feature = torch.from_numpy(video_feature)
 
         return video_feature, label_caps
+
+class WeirdDataset(Dataset):
+        def __init__(self, labels_file, vid_dir, transform=None, target_transform=None):
+        # fix this
+        
+            with open(labels_file, 'r') as FILE_:
+                self.vid_labels = json.load(FILE_)
+
+            self.vid_dir = vid_dir
+            self.transform = transform
+            self.target_transform = target_transform
+
+        def __len__(self):
+            return len(self.vid_labels)
+        
+        @cache
+        def get_ids(self):
+            return [label_id for label_id in self.vid_labels]
+        
+        def __getitem__(self, idx):
+            label = self.vid_labels[idx]
+            avi_file = label['id']
+            label_caps = label['caption']
+            label_caps = sentence_to_idx(label_caps[0])
+            label_caps = torch.tensor(label_caps)
+            #video_feature = torch.load((Path(self.vid_dir)/'feat')/f'{avi_file}.npy')
+            video_feature = np.load((Path(self.vid_dir)/'feat')/f'{avi_file}.npy')
+            video_feature = torch.from_numpy(video_feature)
+
+            return (avi_file, video_feature), label_caps
+
     

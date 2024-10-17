@@ -42,9 +42,9 @@ def sentence_to_idx(caption, max_length = max_length, word_to_idx=word_to_idx, o
     caption = caption.replace('.','').replace('?','').replace('!','').replace(',','').replace("'",'').replace('-','').replace('"','')
     words = ['<BOS>'] + caption.split()
     if len(words) < max_length:
-        words = words + ((max_length-1)-(len(words))) * ['<PAD>'] + ['<EOS>']
+        words = words + ['<EOS>'] + ((max_length-1)-(len(words))) * ['<PAD>']
     else:
-        words = words[:max_length-1] + ['<EOS>']
+        words = words[:max_length] 
     words = [word_to_idx.get(word,word_to_idx['<UNK>']) for word in words]
     return words
 

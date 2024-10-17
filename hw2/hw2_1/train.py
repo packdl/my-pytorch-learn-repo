@@ -31,6 +31,7 @@ def train_loop(dataloader, model, loss_fn, optimize):
     train_loss, correct = 0,0
     size = len(dataloader.dataset)
 
+    bleus = []
     for batch, (X, y) in enumerate(dataloader):
         X = X.to(device)
         y = y.to(device)
@@ -45,29 +46,45 @@ def train_loop(dataloader, model, loss_fn, optimize):
         #loss = loss_fn(y_pred, y)
         loss = loss_fn(y_pred.view(-1, y_pred.size(-1)), y.view(-1))
         train_loss += loss.item()
-        correct += (y_pred.argmax(dim=2) == y).type(torch.float).sum().item()
 
+        batch_size = y_pred.size(0)
+        seq_length = y_pred.size(1)
+        y_pred_view, y_view = y_pred.view(-1, y_pred.size(-1)), y.view(-1)
+            
+        pred_sentence = []
+        actual = []
+        for seq in range(seq_length):
+            pred_sentence.append(idx_to_word[torch.argmax(y_pred_view[seq]).item()])
+            actual.append(idx_to_word[y_view[seq].item()])
+
+        pred_sentence = remove_other_tokens(pred_sentence)
+        actual = remove_other_tokens(actual)
+
+        bleus.append(BLEU(pred_sentence, actual) if pred_sentence else 0)
+        
         loss.backward()
         optimize.step()
     
     train_loss /= num_batches
-    correct /=size
-
-    return train_loss, correct
+    
+    return sum(bleus)/size, train_loss
         
 idx_to_word = {v:k for k, v in word_to_idx.items()}
-def eval_loop(dataloader, model):
+def eval_loop(dataloader, mode, loss_fn):
     model.eval()
     size= len(dataloader.dataset)
 
     with torch.no_grad():
-        
+        eval_loss = 0
         bleus = []
         for X,y in dataloader:
             X = X.to(device)
             y = y.to(device)
             y_pred = model(X)
             
+            loss = loss_fn(y_pred.view(-1, y_pred.size(-1)), y.view(-1))
+            eval_loss += loss.item()
+
             batch_size = y_pred.size(0)
             seq_length = y_pred.size(1)
             y_pred_view, y_view = y_pred.view(-1, y_pred.size(-1)), y.view(-1)
@@ -83,11 +100,12 @@ def eval_loop(dataloader, model):
 
             bleus.append(BLEU(pred_sentence, actual) if pred_sentence else 0)
 
-        return sum(bleus)/size, pred_sentence, actual
+        return sum(bleus)/size, eval_loss/len(dataloader), pred_sentence, actual
 
 if __name__=='__main__':
     #model = Seq2Seq(4096, 512, 512, 512)
-    model=Seq2Seq(4096, 512)
+    # input size 4096, hidden size 128
+    model=Seq2Seq(4096, 128)
     model.to(device, dtype=torch.float64)
     lr = .001
     optimizer1 = torch.optim.Adam(model.parameters(), lr)
@@ -102,7 +120,7 @@ if __name__=='__main__':
         epoch = 0
         loss = 0
     
-    epochs = 60
+    epochs = 1
 
     if epoch / epochs > .95:
         epochs *=2
@@ -115,7 +133,7 @@ if __name__=='__main__':
     train_dataloader = DataLoader(MLDSVideoDataset('training_label.json', 'training_data'), batch_size=batch_size)
     eval_dataloader = DataLoader(MLDSVideoDataset('testing_label.json', 'testing_data'), batch_size=batch_size)
     
-    epoch_list, loss_list, bleu_list,acc_list = [],[], [], []
+    epoch_list, loss_list, eval_loss, bleu_list, train_bleu = [],[], [], [], []
 
     start = time.time()
     with open('training_run.txt','a') as run:
@@ -123,20 +141,23 @@ if __name__=='__main__':
 
     for epoch in range(epoch+1, epochs):
         with open('training_run.txt','a') as run:
-            loss, correct = train_loop(train_dataloader, model, loss_fn, optimizer1)
+            bleu, loss = train_loop(train_dataloader, model, loss_fn, optimizer1)
             
             if epoch%10==0:
-                run.write(f'Epoch: {epoch}. Loss: {loss}. Acurracy: {correct}. Time: {time.time()}\n')
-                print(f'Epoch: {epoch}. Loss: {loss}. Acurracy: {correct}. Time: {time.time()}')
+                run.write(f'Epoch: {epoch}. Training Loss: {loss}. Training BLEU:{bleu}  Time: {time.time()}\n')
+                print(f'Epoch: {epoch}. Training Loss: {loss}. Training BLEU:{bleu} Time: {time.time()}')
                 loss_list.append(loss)
                 epoch_list.append(epoch)
-                acc_list.append(correct)
-
-            bleu, pred, actual = eval_loop(eval_dataloader, model)
+                train_bleu.append(bleu)
+                
+            bleu, loss, pred, actual = eval_loop(eval_dataloader, model, loss_fn)
             if epoch%10 ==0:
-                run.write(f'Epoch: {epoch}. BLEU: {bleu}\n')
-                print(f'Epoch: {epoch}. BLEU: {bleu}') 
+                run.write(f'Epoch: {epoch}. Test loss {loss}. Test BLEU: {bleu}\n')
+                print(f'Epoch: {epoch}. Test loss {loss}. Test BLEU: {bleu}') 
+                run.write(f'{epoch = }. {pred = }. {actual =}\n')
+                print(f'{epoch = }. {pred = }. {actual =}')
                 bleu_list.append(bleu)
+                eval_loss.append(loss)
 
 
             if epoch !=0 and epoch % 50 ==0:
@@ -147,8 +168,6 @@ if __name__=='__main__':
                 'loss': loss,
                 }, './checkpoint.tar')
 
-                run.write(f'{epoch = }. {pred = }. {actual =}\n')
-                print(f'{epoch = }. {pred = }. {actual =}')
      
     end = time.time()
     with open('training_run.txt','a') as run:
@@ -159,5 +178,15 @@ if __name__=='__main__':
             #print(f'Epoch: {epoch}. BLEU: {bleu}')
 
     torch.save(model, 's2vt.pth')
-    df = pd.DataFrame({'epoch':epoch_list, 'bleu':bleu_list,'loss':loss_list,'acc':acc_list})
-    df.to_csv('raw_data.txt')
+    torch.save({'epoch': epoch,'model_state_dict': model.state_dict(),'optimizer_state_dict': optimizer1.state_dict(),'loss': loss,}, './checkpoint.tar')
+
+    if Path('raw_data.txt').exists():
+        olddata = pd.read_csv('raw_data.txt')
+        columns = ['epoch', 'eval_loss', 'eval_bleu','train_loss', 'train_bleu']
+        df = pd.DataFrame({'epoch':epoch_list, 'eval_loss':eval_loss, 'eval_bleu':bleu_list,'train_loss':loss_list, 'train_bleu':train_bleu})
+        if not df.empty:
+            df = pd.concat([olddata[columns], df[columns]], ignore_index=True)
+        df.to_csv('raw_data.txt')
+    else:
+        df = pd.DataFrame({'epoch':epoch_list, 'eval_loss':eval_loss, 'eval_bleu':bleu_list,'train_loss':loss_list, 'train_bleu':train_bleu})
+        df.to_csv('raw_data.txt')
