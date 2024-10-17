@@ -49,25 +49,27 @@ def train_loop(dataloader, model, loss_fn, optimize):
 
         batch_size = y_pred.size(0)
         seq_length = y_pred.size(1)
-        y_pred_view, y_view = y_pred.view(-1, y_pred.size(-1)), y.view(-1)
-            
-        pred_sentence = []
-        actual = []
-        for seq in range(seq_length):
-            pred_sentence.append(idx_to_word[torch.argmax(y_pred_view[seq]).item()])
-            actual.append(idx_to_word[y_view[seq].item()])
+        #y_pred_view, y_view = y_pred.view(-1, y_pred.size(-1)), y.view(-1)
+                        
+        final_candidate, final_actual = [], []
+        for candidate in range(batch_size):
+            pred_sentence = []
+            actual = []    
+            for seq in range(seq_length):
+                pred_sentence.append(idx_to_word[torch.argmax(y_pred[candidate][seq]).item()])
+                actual.append(idx_to_word[y[candidate][seq].item()])
 
-        pred_sentence = remove_other_tokens(pred_sentence)
-        actual = remove_other_tokens(actual)
+            final_candidate.append(remove_other_tokens(pred_sentence))
+            final_actual.append(remove_other_tokens(actual))
 
-        bleus.append(BLEU(pred_sentence, actual) if pred_sentence else 0)
+        bleus = bleus + [BLEU(c, t) for c, t in zip(final_candidate, final_actual)]
         
         loss.backward()
         optimize.step()
     
     train_loss /= num_batches
     
-    return sum(bleus)/size, train_loss
+    return sum(bleus)/len(bleus), train_loss
         
 idx_to_word = {v:k for k, v in word_to_idx.items()}
 def eval_loop(dataloader, mode, loss_fn):
@@ -87,20 +89,23 @@ def eval_loop(dataloader, mode, loss_fn):
 
             batch_size = y_pred.size(0)
             seq_length = y_pred.size(1)
-            y_pred_view, y_view = y_pred.view(-1, y_pred.size(-1)), y.view(-1)
+            #y_pred_view, y_view = y_pred.view(-1, y_pred.size(-1)), y.view(-1)
             
-            pred_sentence = []
-            actual = []
-            for seq in range(seq_length):
-                pred_sentence.append(idx_to_word[torch.argmax(y_pred_view[seq]).item()])
-                actual.append(idx_to_word[y_view[seq].item()])
+            
+            final_candidate, final_actual = [], []
+            for candidate in range(batch_size):
+                pred_sentence = []
+                actual = []    
+                for seq in range(seq_length):
+                    pred_sentence.append(idx_to_word[torch.argmax(y_pred[candidate][seq]).item()])
+                    actual.append(idx_to_word[y[candidate][seq].item()])
 
-            pred_sentence = remove_other_tokens(pred_sentence)
-            actual = remove_other_tokens(actual)
+                final_candidate.append(remove_other_tokens(pred_sentence))
+                final_actual.append(remove_other_tokens(actual))
 
-            bleus.append(BLEU(pred_sentence, actual) if pred_sentence else 0)
+            bleus = bleus + [BLEU(c, t) for c, t in zip(final_candidate, final_actual)]
 
-        return sum(bleus)/size, eval_loss/len(dataloader), pred_sentence, actual
+        return sum(bleus)/len(bleus), eval_loss/len(dataloader), final_candidate[0], final_actual[0]
 
 if __name__=='__main__':
     #model = Seq2Seq(4096, 512, 512, 512)
@@ -120,7 +125,7 @@ if __name__=='__main__':
         epoch = 0
         loss = 0
     
-    epochs = 1
+    epochs = 200
 
     if epoch / epochs > .95:
         epochs *=2
@@ -177,7 +182,7 @@ if __name__=='__main__':
             #un.write(f'Epoch: {epoch}. BLEU: {bleu}\n')
             #print(f'Epoch: {epoch}. BLEU: {bleu}')
 
-    torch.save(model, 's2vt.pth')
+    torch.save(model.state_dict(), 's2vt.pth')
     torch.save({'epoch': epoch,'model_state_dict': model.state_dict(),'optimizer_state_dict': optimizer1.state_dict(),'loss': loss,}, './checkpoint.tar')
 
     if Path('raw_data.txt').exists():

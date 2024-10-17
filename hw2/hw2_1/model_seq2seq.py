@@ -9,6 +9,7 @@ from torchvision.models import vgg16, VGG16_Weights
 from torch.utils.data import DataLoader
 
 from dictionary import word_to_idx, max_length, remove_other_tokens
+from dataloader import WeirdDataset
 
 class Attention(nn.Module):
     """
@@ -48,7 +49,8 @@ class Seq2Seq(nn.Module):
         self.input_lin = nn.Linear(input_size, hidden)
         self.logits = nn.Linear(hidden, len(word_to_idx))
         self.fixy = nn.Linear(hidden, hidden)
-        self.dropout = nn.Dropout(p = 0.05)
+        self.dropout = nn.Dropout(p = 0.3)
+        self.dropout2 = nn.Dropout(p = 0.2)
         self.hidden = hidden
 
     def forward(self, x, training_label = None):
@@ -99,7 +101,7 @@ class Seq2Seq(nn.Module):
     
     def forward_step(self, decoder_input, d_hidden, encoder_output, e_hidden):
         # decoder_input = F.relu(decoder_input)
-        #decoder_input = self.dropout(decoder_input)
+        decoder_input = self.dropout2(decoder_input)
         # query = hidden.permute(1,0,2)
 
         #e_hidden = e_hidden.permute(1,0,2)
@@ -149,24 +151,29 @@ if __name__ == '__main__':
             file_ids = id_file.readlines()
         file_ids =[vid_id.strip() for vid_id in file_ids]
 
-        eval_dataloader = DataLoader(MLDSVideoDataset('testing_label.json', test_dir), batch_size=1)
-        model=Seq2Seq(4096, 256)
+        #eval_dataloader = DataLoader(MLDSVideoDataset('testing_label.json', test_dir), batch_size=1)
+        model=Seq2Seq(4096, 128)
 
         if (Path('.')/'s2vt.pth').exists():
-            print("Checkpoint file loading.")
+            print("Loading model parameters.")
             checkpoint = torch.load(Path('.')/'s2vt.pth', weights_only=True)
             model.load_state_dict(checkpoint)
+            print("Model loaded")
 
         write_to_file = []
-        for X, target in eval_dataloader:
-            loader = DataLoader(WeirdDataset('testing_label.json', 'testing_data'), batch_size=1)
-            for X,target in loader:
-                label, data = x
-                label=label[0]
-                candidate = model(data)
-                write_to_file.append(f'{label},{candidate}')
-
-
+        loader = DataLoader(WeirdDataset('testing_label.json', 'testing_data'), batch_size=1)
+        for X,target in loader:
+            labels, data = X
+            candidate = model(data)
+            seq_length = candiate.size(1)
+            for idx, label in enumerate(labels):
+                result = candidate[idx]
+                pred_sentence = []
+                for word in range(seq_length):
+                    result[word]
+                    pred_sentence.append(idx_to_word[torch.argmax(result[word]).item()])
+                pred_sentence = ' '.join(pred_sentence)
+                write_to_file.append(f'{label},{pred_sentence}')
         with open(outputfile, 'w') as out:
             out.write('\n'.join(write_to_file))     
     else:
