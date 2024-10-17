@@ -62,7 +62,7 @@ def train_loop(dataloader, model, loss_fn, optimize):
             final_candidate.append(remove_other_tokens(pred_sentence))
             final_actual.append(remove_other_tokens(actual))
 
-        bleus = bleus + [BLEU(c, t) for c, t in zip(final_candidate, final_actual)]
+        bleus = bleus + [(BLEU(c, t) if c.strip() else 0) for c, t in zip(final_candidate, final_actual)]
         
         loss.backward()
         optimize.step()
@@ -103,7 +103,7 @@ def eval_loop(dataloader, mode, loss_fn):
                 final_candidate.append(remove_other_tokens(pred_sentence))
                 final_actual.append(remove_other_tokens(actual))
 
-            bleus = bleus + [BLEU(c, t) for c, t in zip(final_candidate, final_actual)]
+            bleus = bleus + [(BLEU(c, t) if c.strip() else 0) for c, t in zip(final_candidate, final_actual)]
 
         return sum(bleus)/len(bleus), eval_loss/len(dataloader), final_candidate[0], final_actual[0]
 
