@@ -41,7 +41,7 @@ Afterwards, you should be able to install and rerun any of the Jupyter notebooks
 ### Installation
 
 Change directory to the HW2/hw2_1 directory
-There is a requirements.txt file containing packages necessary to run HW1 and HW2. These packages should be installed in a virtual environment using the following commands:
+There is a requirements.txt file containing packages necessary to run HW2. These packages should be installed in a virtual environment using the following commands:
 
 ```
 python -m venv .venv
