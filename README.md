@@ -51,6 +51,10 @@ pip install -r requirements.txt
 
 ### Usage
 From the hw2/hw2_1 directory, run the hw2_seq2seq.sh file. If provides a usage string if incorrect number of arguments are provided.
+```
+./hw2_seq2seq.sh test_data output_testset.txt
+python bleu_eval.py output_testset.txt > bleu_eval_results.txt
+```
 
 ### Files
 - [hw2_seq2seq.sh](hw2/hw2_1/hw2_seq2seq.sh) - Run the model against a test directory of videos to generate captions
@@ -59,3 +63,5 @@ From the hw2/hw2_1 directory, run the hw2_seq2seq.sh file. If provides a usage s
 - [train2.py](hw2/hw2_1/train2.py) - Usage: python train2.py. It generates 2 models with different hidden dimensions and runs for 100 epochs and saves the best fit model and the epoch where that best fit model was achieved to disk.
 - [training_run.txt](hw2/hw2_1/training_run.txt) - Log file from execution of train2.py. It reports when the two models under training have their highest BLEU values in validation.
 - [raw_data.txt](hw2/hw2_1/raw_data.txt) - A csv file of data from the training run.
+- [output_testset.txt](hw2/hw2_1/output_testset.txt) - The output testset I generated to test the capability
+- [bleu_eval_results.txt](hw2/hw2_1/bleu_eval_results.txt) - The bleu eval results I achieved from my output_testset.txt file.
