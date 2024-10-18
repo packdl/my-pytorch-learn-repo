@@ -1,0 +1,1 @@
+Average bleu score is 0.4529276201533998
