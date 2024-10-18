@@ -174,7 +174,7 @@ if __name__ == '__main__':
                 for word in range(seq_length):
                     result[word]
                     pred_sentence.append(idx_to_word[torch.argmax(result[word]).item()])
-                pred_sentence = ' '.join(pred_sentence)
+                pred_sentence = remove_other_tokens(pred_sentence)
                 write_to_file.append(f'{label},{pred_sentence}')
         with open(outputfile, 'w') as out:
             out.write('\n'.join(write_to_file))
