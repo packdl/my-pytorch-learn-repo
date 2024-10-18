@@ -116,7 +116,7 @@ class Seq2Seq(nn.Module):
         output, hidden =  self.gru2(decoder_input, d_hidden)
         return output, hidden
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
     """ torch.set_default_device('cuda')
     x = torch.rand(5, 80, 4096)
     x.to('cuda')
@@ -130,7 +130,7 @@ if __name__ == '__main__':
 
 
 if __name__ == '__main__':
-    
+    idx_to_word = {v:k for k, v in word_to_idx.items()}
     if torch.cuda.is_available():
         device = 'cuda'
     elif torch.backends.mps.is_available():
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     else:
         device = 'cpu'
 
-    print(f'{device} is available')
+    #print(f'{device} is available')
     torch.set_default_device(device)
     torch.set_default_dtype(torch.float64)
     
@@ -153,10 +153,11 @@ if __name__ == '__main__':
 
         #eval_dataloader = DataLoader(MLDSVideoDataset('testing_label.json', test_dir), batch_size=1)
         model=Seq2Seq(4096, 128)
+        model=model.to(device)
 
-        if (Path('.')/'s2vt.pth').exists():
+        if (Path('.')/'model1.pth').exists():
             print("Loading model parameters.")
-            checkpoint = torch.load(Path('.')/'s2vt.pth', weights_only=True)
+            checkpoint = torch.load(Path('.')/'model1.pth', weights_only=True)
             model.load_state_dict(checkpoint)
             print("Model loaded")
 
@@ -164,8 +165,9 @@ if __name__ == '__main__':
         loader = DataLoader(WeirdDataset('testing_label.json', 'testing_data'), batch_size=1)
         for X,target in loader:
             labels, data = X
+            data = data.to(device)
             candidate = model(data)
-            seq_length = candiate.size(1)
+            seq_length = candidate.size(1)
             for idx, label in enumerate(labels):
                 result = candidate[idx]
                 pred_sentence = []
@@ -175,6 +177,8 @@ if __name__ == '__main__':
                 pred_sentence = ' '.join(pred_sentence)
                 write_to_file.append(f'{label},{pred_sentence}')
         with open(outputfile, 'w') as out:
-            out.write('\n'.join(write_to_file))     
+            out.write('\n'.join(write_to_file))
+        print(f"Output file created at {outputfile}")     
     else:
         print('usage: hw2_seq2seq.sh TESTDIR OUTPUT_FILE')
+
