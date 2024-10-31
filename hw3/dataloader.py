@@ -24,7 +24,7 @@ class BertDataset(Dataset):
     
     def __getitem__(self, idx):
         groups = self.dictionary.get_data_groups()
-        print(len(groups))
+        #print(len(groups))
         return groups[idx]
 
         
