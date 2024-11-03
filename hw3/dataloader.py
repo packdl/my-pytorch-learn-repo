@@ -16,6 +16,7 @@ class BertDataset(Dataset):
             self.dictionary = BertDictionary(dataset_file)
             self.transform = transform
             self.target_transform = target_transform
+            self.groups = self.dictionary.get_data_groups()
 
 
     @cache
@@ -23,7 +24,7 @@ class BertDataset(Dataset):
         return self.dictionary.num_qapairs()                
     
     def __getitem__(self, idx):
-        groups = self.dictionary.get_data_groups()
+        groups = self.groups
         #print(len(groups))
         return groups[idx]
 
