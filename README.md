@@ -79,10 +79,11 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 ### Usage
-From the hw3 directory, the fine tuning can be rerun using the model2-1.py file. This is time consuming activity and averaged 50 minutes. The fine tuned model is listed in the files section below. The saved fine-tuned model can also be loaded directly.
+From the hw3 directory, the fine tuning can be rerun using the model2-1.py file. This is time consuming activity and averaged 50 minutes. The fine tuned model is listed in the files section below. The saved fine-tuned model can also be loaded directly. Alternatively, the test.py file can be run to just generate the average f1 score over the test set. 
 
 ### Files
 - [model2-1.py](hw3/model2-1.py) - Model used to download the pre-trained model and fine tune it. It saves the fine tuned model to disk along with data from the epochs.
 - [alert_finetuned2-1.pth](hw3/albert_finetuned2-1.pth) - The fine tuned model created in this exercise
 - [raw_data2-1.txt](hw3/raw_data2-1.txt) - A csv file of data saved from fine tuned primarily loss and f1 scores 
 - [output2-1.txt](hw3/output2-1.txt) - The output printed on command line when doing fine tuning
+- [test.py](hw3/test.py) - a test file to generate the f1 score for test set. Takes several minutes to run. 
