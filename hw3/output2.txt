@@ -1,0 +1,38 @@
+cuda is available
+Some weights of AlbertForQuestionAnswering were not initialized from the model checkpoint at albert/albert-base-v2 and are newly initialized: ['qa_outputs.bias', 'qa_outputs.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Epoch 0. Train_Loss: 4.669764927455357, Train_F1: 5.750493442134666, Val_loss: 4.06674832036299, Val_F1 7.751859137395348
+scheduler.get_last_lr() = [4.94e-06]
+Epoch 1. Train_Loss: 3.9313209170386907, Train_F1: 9.317186442421383, Val_loss: 3.6015797507809135, Val_F1 14.000584056340015
+scheduler.get_last_lr() = [4.880000000000001e-06]
+Epoch 2. Train_Loss: 3.226837158203125, Train_F1: 20.275572586190425, Val_loss: 2.7813206861266697, Val_F1 28.206504340342683
+scheduler.get_last_lr() = [4.8200000000000004e-06]
+Epoch 3. Train_Loss: 2.6316077822730657, Train_F1: 30.068451222495828, Val_loss: 2.375851809901443, Val_F1 33.87847514393466
+scheduler.get_last_lr() = [4.76e-06]
+Epoch 4. Train_Loss: 2.330752418154762, Train_F1: 33.96544961307662, Val_loss: 2.2065520148912108, Val_F1 36.97989887097706
+scheduler.get_last_lr() = [4.7e-06]
+Epoch 5. Train_Loss: 2.1606532505580356, Train_F1: 36.10138686603716, Val_loss: 2.0736234928707993, Val_F1 37.38528173352474
+scheduler.get_last_lr() = [4.6400000000000005e-06]
+Epoch 6. Train_Loss: 2.036041986374628, Train_F1: 37.716131248638625, Val_loss: 2.049843501757055, Val_F1 39.24746895779654
+scheduler.get_last_lr() = [4.58e-06]
+Epoch 7. Train_Loss: 1.9467606317429316, Train_F1: 38.61193812240305, Val_loss: 1.9689889338344195, Val_F1 40.155655537464774
+scheduler.get_last_lr() = [4.52e-06]
+Epoch 8. Train_Loss: 1.8704844883510046, Train_F1: 40.179985613835456, Val_loss: 1.9359435377733196, Val_F1 40.44224913006017
+scheduler.get_last_lr() = [4.46e-06]
+Epoch 9. Train_Loss: 1.804014660063244, Train_F1: 40.51315133204584, Val_loss: 1.908470775073379, Val_F1 40.385653499421295
+scheduler.get_last_lr() = [4.4e-06]
+Epoch 10. Train_Loss: 1.7506227039155506, Train_F1: 41.77599862446893, Val_loss: 1.9019487702296962, Val_F1 41.19995073004372
+scheduler.get_last_lr() = [4.34e-06]
+Epoch 11. Train_Loss: 1.706007094610305, Train_F1: 42.140445324016106, Val_loss: 1.869514672420293, Val_F1 39.40551364792519
+scheduler.get_last_lr() = [4.28e-06]
+Epoch 12. Train_Loss: 1.6546536400204612, Train_F1: 42.731418452656584, Val_loss: 1.9017534366921585, Val_F1 40.568035324202405
+scheduler.get_last_lr() = [4.219999999999999e-06]
+Epoch 13. Train_Loss: 1.6148717971075148, Train_F1: 43.34350095927033, Val_loss: 1.8657186591178372, Val_F1 40.766924094721425
+scheduler.get_last_lr() = [4.16e-06]
+Epoch 14. Train_Loss: 1.5803204491024925, Train_F1: 43.723895304508375, Val_loss: 1.8851887950708208, Val_F1 40.36396339200427
+scheduler.get_last_lr() = [4.1e-06]
+Best F1: 41.19995073004372. Epoch: 10
+
+real    49m27.460s
+user    51m56.393s
+sys     0m11.926s

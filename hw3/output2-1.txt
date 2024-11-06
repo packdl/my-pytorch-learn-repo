@@ -1,0 +1,17 @@
+Some weights of AlbertForQuestionAnswering were not initialized from the model checkpoint at albert/albert-base-v2 and are newly initialized: ['qa_outputs.bias', 'qa_outputs.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Epoch 0. Train_Loss: 2.2386420515498946, Train_F1: 53.44678227950863, Val_loss: 1.7288450225128382, Val_F1 58.703090118075245
+scheduler.get_last_lr() = [4.1e-05]
+Epoch 1. Train_Loss: 1.3401681811415724, Train_F1: 70.85148348581164, Val_loss: 2.0038631818370027, Val_F1 51.959359147277745
+scheduler.get_last_lr() = [3.2000000000000005e-05]
+Epoch 2. Train_Loss: 0.8620536270928347, Train_F1: 81.12304348829252, Val_loss: 1.772133641830938, Val_F1 61.60662644881916
+scheduler.get_last_lr() = [2.3e-05]
+Epoch 3. Train_Loss: 0.45080461896335083, Train_F1: 90.1899887429891, Val_loss: 2.0804899407712, Val_F1 61.662716882431134
+scheduler.get_last_lr() = [1.4e-05]
+Epoch 4. Train_Loss: 0.21085671219043434, Train_F1: 95.85666309781318, Val_loss: 2.3141036315587176, Val_F1 61.952033325025084
+scheduler.get_last_lr() = [5e-06]
+Best F1: 61.952033325025084. Epoch: 4
+
+real    50m13.494s
+user    50m47.454s
+sys     0m6.037s

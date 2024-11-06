@@ -21,7 +21,7 @@ class BertDataset(Dataset):
 
     @cache
     def __len__(self):
-        return self.dictionary.num_qapairs()                
+        return len(self.groups)
     
     def __getitem__(self, idx):
         groups = self.groups
@@ -38,9 +38,13 @@ if __name__=='__main__':
 
     print(bds2[2])
     print(bds[2])
+    
+    
     bds2[1]
     bds2[5]
     bds[5]
+    
+    print(len(bds))
 
 
 """ class MLDSVideoDataset(Dataset):
