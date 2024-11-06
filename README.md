@@ -79,7 +79,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 ### Usage
-From the hw3 directory, the fine tuning can be rerun using the model2-1.py file. This is time consuming activity and averaged 50 minutes. The fine tuned model is listed in the files section below.
+From the hw3 directory, the fine tuning can be rerun using the model2-1.py file. This is time consuming activity and averaged 50 minutes. The fine tuned model is listed in the files section below. The saved fine-tuned model can also be loaded directly.
 
 ### Files
 - [model2-1.py](hw3/model2-1.py) - Model used to download the pre-trained model and fine tune it. It saves the fine tuned model to disk along with data from the epochs.
