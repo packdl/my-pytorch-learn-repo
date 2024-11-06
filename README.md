@@ -65,3 +65,24 @@ python bleu_eval.py output_testset.txt > bleu_eval_results.txt
 - [raw_data.txt](hw2/hw2_1/raw_data.txt) - A csv file of data from the training run.
 - [output_testset.txt](hw2/hw2_1/output_testset.txt) - The output testset I generated to test the capability
 - [bleu_eval_results.txt](hw2/hw2_1/bleu_eval_results.txt) - The bleu eval results I achieved from my output_testset.txt file.
+
+## HW3
+
+### Installation
+
+Change directory to hw3. 
+There is a requirements.txt file containing packages necessary to run HW3. These packages should be installed in a virtual environment using the following commands:
+
+```
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+### Usage
+From the hw3 directory, the fine tuning can be rerun using the model2-1.py file. This is time consuming activity and averaged 50 minutes. The fine tuned model is listed in the files section below.
+
+### Files
+- [model2-1.py](hw3/model2-1.py) - Model used to download the pre-trained model and fine tune it. It saves the fine tuned model to disk along with data from the epochs.
+- [alert_finetuned2-1.pth](hw3/albert_finetuned2-1.pth) - The fine tuned model created in this exercise
+- [raw_data2-1.txt](hw3/raw_data2-1.txt) - A csv file of data saved from fine tuned primarily loss and f1 scores 
+- [output2-1.txt](hw3/output2-1.txt) - The output printed on command line when doing fine tuning
