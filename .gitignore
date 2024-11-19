@@ -158,7 +158,7 @@ cython_debug/
 MLDS_hw2_1_data
 training_data
 testing_data
-
+hw4data
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
