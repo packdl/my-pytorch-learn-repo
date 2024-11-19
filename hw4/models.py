@@ -12,11 +12,28 @@ class NetG(nn.Module):
     def __init__(self):
         super(NetG,self).__init__()
         # Adaptead from https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
-        self.sequence = nn.Sequential(
+        """ self.sequence = nn.Sequential(
             nn.ConvTranspose2d(zvect, feat * 4, 4, 2, 1, bias=False),
             nn.BatchNorm2d(feat * 4),
             nn.ReLU(True),
             nn.ConvTranspose2d(feat * 4, feat * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(feat * 4),
+            nn.ReLU(True),
+            nn.ConvTranspose2d( feat * 4, feat * 2 , 4, 2, 1, bias=False),
+            nn.BatchNorm2d(feat * 2),
+            nn.ReLU(True),
+            nn.ConvTranspose2d( feat*2, feat, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(feat),
+            nn.ReLU(True),
+            nn.ConvTranspose2d( feat, channels, 4, 2, 1, bias=False),
+            nn.Tanh(),
+        ) """
+
+        self.sequence = nn.Sequential(
+            nn.ConvTranspose2d(zvect, feat * 8, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(feat * 8),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(feat * 8, feat * 4, 4, 2, 1, bias=False),
             nn.BatchNorm2d(feat * 4),
             nn.ReLU(True),
             nn.ConvTranspose2d( feat * 4, feat * 2 , 4, 2, 1, bias=False),
@@ -47,7 +64,10 @@ class NetD(nn.Module):
             nn.BatchNorm2d(feat * 4),
             nn.LeakyReLU(0.2, inplace=True),
             # state size. ``(ndf*4) x 8 x 8``
-            nn.Conv2d(feat * 4, 1, 4, 1, 0, bias=False),
+            nn.Conv2d(feat * 4, feat * 8, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(feat * 8),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(feat * 8, 1, 2, 1, 0, bias=False),
             nn.Sigmoid()
         )
 
