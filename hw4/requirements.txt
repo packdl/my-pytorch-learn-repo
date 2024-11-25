@@ -4,3 +4,5 @@ torchaudio
 pandas
 matplotlib
 numpy
+ipython
+torcheval
