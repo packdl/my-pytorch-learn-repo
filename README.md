@@ -87,3 +87,39 @@ From the hw3 directory, the fine tuning can be rerun using the model2-1.py file.
 - [raw_data2-1.txt](hw3/raw_data2-1.txt) - A csv file of data saved from fine tuned primarily loss and f1 scores 
 - [output2-1.txt](hw3/output2-1.txt) - The output printed on command line when doing fine tuning
 - [test.py](hw3/test.py) - a test file to generate the f1 score for test set. Takes several minutes to run. 
+
+## HW4
+
+### Installation 
+
+Change directory to hw4.
+There is a requirements.txt in the hw4 directory containing packages necessary to run the included Jupyter notebooks. These packages should be installed in a virtual environment using the following commands:
+
+```
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Make sure the ipython kernel is part of the virtual environment.
+
+```
+pip install ipykernel
+python -m ipykernel --name=hwenv
+```
+In Jupyter, set the kernel to hwenv.
+
+Afterwards, you should be able to install and rerun any of the Jupyter notebooks.
+
+### Files
+The hw4 directory includes all python files and Jupyter notebooks to create and train the GANs. Additional artifacts int he directory include .pth files containing the generator and discriminator weights. 
+
+- [DCGAN training notebook](hw4/dcgan_train_v2_no_label.ipynb)
+    - [DCGAN generator weights](hw4/dcgan_g.pth)
+    - [DCGAN discriminator weights](hw4/dcgan_d.pth)
+- [WGAN training notebook](hw4/wgan_train_v2.ipynb)
+    - [WGAN generator weights](hw4/wgan_g.pth)
+    - [WGAN discriminator weights](hw4/wgan_d.pth)
+- [ACGAN training notebook](hw4/acgan_train.ipynb)
+    - [ACGAN generator weights](hw4/g_acgan.pth)
+    - [ACGAN discriminator weights](hw4/d_acgan.pth)
